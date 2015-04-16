@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>   
+<!DOCTYPE mapper   
+PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"  
+"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.xujianguo.dao.PersonDao">
+	<cache eviction="LRU" type="com.xujianguo.cache.RedisCache"/>
+
+	<resultMap type="com.xujianguo.model.Person" id="PersonMap">
+		<id property="id" column="id"/>
+		<result property="name" column="name"/>
+		<association property="address" column="address" select="com.xujianguo.dao.AddressDao.findById"/>
+		<collection property="cars" column="id" select="com.xujianguo.dao.CarDao.findByOwner"/>
+	</resultMap>
+	
+	<select id="findById" parameterType="int" resultMap="PersonMap" useCache="true">
+		select * from person where id=#{id}
+	</select>
+	
+	<select id="findOne" parameterType="java.util.Map" resultMap="PersonMap" useCache="true">
+		<![CDATA[ 
+        select * from ${tableName} where id=1]]>  
+	</select>
+</mapper>

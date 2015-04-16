@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!ELEMENT dependencies (statements?)>
+
+<!ELEMENT statements (statement*)>
+
+<!ELEMENT statement (observer+)>
+
+<!ELEMENT statement EMPTY>
+<!ATTLIST statement
+id CDATA #REQUIRED
+>
+<!ELEMENT observer EMPTY>
+<!ATTLIST observer
+id CDATA #REQUIRED
+>

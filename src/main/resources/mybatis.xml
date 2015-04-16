@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<!-- 指定properties配置文件， 我这里面配置的是数据库相关 -->
+	<properties resource="dbConfig.properties"></properties>
+	
+	<!-- 指定Mybatis使用log4j -->
+	<settings>
+		<setting name="cacheEnabled" value="true"/>
+		<setting name="logImpl" value="LOG4J" />
+	</settings>
+
+	<!-- 拦截器插件 -->
+	<plugins>
+		<plugin interceptor="com.xujianguo.cache.intercepts.CacheHandlerIntercept">
+			<property name="dependency" value="cache-config.xml" />
+			<property name="cacheEnabled" value="true" />
+		</plugin>
+	</plugins>
+
+	<!-- 配置了两个数据库 -->
+	<environments default="main">
+		<environment id="main">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<!-- 上面指定了数据库配置文件， 配置文件里面也是对应的这四个属性 -->
+				<property name="driver" value="${main.driver}" />
+				<property name="url" value="${main.url}" />
+				<property name="username" value="${main.username}" />
+				<property name="password" value="${main.password}" />
+			</dataSource>
+		</environment>
+		<environment id="test">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<!-- 上面指定了数据库配置文件， 配置文件里面也是对应的这四个属性 -->
+				<property name="driver" value="${test.driver}" />
+				<property name="url" value="${test.url}" />
+				<property name="username" value="${test.username}" />
+				<property name="password" value="${test.password}" />
+			</dataSource>
+		</environment>
+	</environments>
+
+	<!-- 映射文件，mybatis精髓， 后面才会细讲 -->
+	<mappers>
+		<mapper resource="com/xujianguo/mapper/UserMapper.xml" />
+		<mapper resource="com/xujianguo/mapper/PersonMapper.xml" />
+		<mapper resource="com/xujianguo/mapper/AddressMapper.xml" />
+		<mapper resource="com/xujianguo/mapper/CarMapper.xml" />
+	</mappers>
+	
+</configuration>

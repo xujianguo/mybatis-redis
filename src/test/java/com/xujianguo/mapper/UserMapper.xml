@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>   
+<!DOCTYPE mapper   
+PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"  
+"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.xujianguo.dao.UserDao">
+	<!-- 二级缓存的配置 -->
+	<cache />
+
+	<select id="findUserById" resultType="com.xujianguo.model.User" useCache="true">
+		select * from user where id = #{id}
+	</select>
+
+	<insert id="insert" parameterType="com.xujianguo.model.User">
+		insert into user(name, password, age) values(#{name}, #{password}, #{age})
+	</insert>
+
+	<update id="update" parameterType="com.xujianguo.model.User">
+		update user set name=#{name}, password=#{password}, age=#{age} where id=#{id}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		delete from user where id=#{id}
+	</delete>
+	
+	<select id="findAll" resultType="com.xujianguo.model.User">
+		select * from user
+	</select>
+	
+	<select id="findName" resultType="string">
+		select name from user
+	</select>
+</mapper>

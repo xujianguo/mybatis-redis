@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dependencies>
+   <statements>
+       <statement id="com.xujianguo.dao.PersonDao.findById">
+          <observer id="com.xujianguo.dao.PersonDao.findOne"/>
+       </statement>
+   </statements>
+</dependencies>
