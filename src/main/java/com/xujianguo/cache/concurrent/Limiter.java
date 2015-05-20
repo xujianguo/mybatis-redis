@@ -67,7 +67,7 @@ public class Limiter {
 	 * @throws InterruptedException
 	 */
 	public void limit() throws InterruptedException {
-		sync.acquireInterruptibly(0);
+		sync.acquireSharedInterruptibly(0);
 	}
 	
 	/**
