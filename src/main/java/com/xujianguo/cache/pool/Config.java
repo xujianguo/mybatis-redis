@@ -221,7 +221,7 @@ public class Config {
 	 * @email ray_xujianguo@yeah.net
 	 * @time 2015年4月12日
 	 */
-	private class LimiterParam {
+	public static class LimiterParam {
 		private Long limit;
 
 		public Long getLimit() {

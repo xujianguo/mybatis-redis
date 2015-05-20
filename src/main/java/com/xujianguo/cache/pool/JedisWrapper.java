@@ -33,7 +33,12 @@ public class JedisWrapper {
 	}
 	
 	public Object getObject(Object key) {
-		return SerializeUtil.deserialize(target.get(SerializeUtil.serialize(key)));
+		byte[] data = target.get(SerializeUtil.serialize(key));
+		if(data != null && data.length > 0) {
+			return SerializeUtil.deserialize(data);
+		} else {
+			return null;
+		}
 	}
 	
 	public Object removeObject(Object key) {
