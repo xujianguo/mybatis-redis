@@ -48,14 +48,16 @@ public class PropertyReflect {
 					if(field != null) {
 						//获取属性类
 						Class typeClass = field.getType();
-						//查找一个属性类中以String为参数的构造方法
-						Constructor constructor = typeClass.getConstructor(String.class);
-						//构造出这样的一个值
-						Object obj = constructor.newInstance(prop.get(key).toString());
-						//强制访问属性
-						field.setAccessible(true);
-						//为属性设置值
-						field.set(target, obj);
+						if(index(field.getType()) == -1) {
+							//查找一个属性类中以String为参数的构造方法
+							Constructor constructor = typeClass.getConstructor(String.class);
+							//构造出这样的一个值
+							Object obj = constructor.newInstance(prop.get(key).toString());
+							//强制访问属性
+							field.setAccessible(true);
+							//为属性设置值
+							field.set(target, obj);
+						}
 					}
 				} catch(NoSuchFieldException e) {
 					log.error("[ReflectProperty:没有properties文件中的字段]", e);
@@ -74,7 +76,10 @@ public class PropertyReflect {
 						String[] keyStrings = ((String)key).split("\\.");
 						String fieldName = keyStrings[keyStrings.length-1];
 						if(field.getName().equals(fieldName)) {
-							list.add(prop.get(key));
+							Constructor constructor = field.getType().getComponentType().getConstructor(String.class);
+							Object obj = constructor.newInstance(prop.get(key).toString());
+							//list.add(prop.get(key));
+							list.add(obj);
 						}
 					}
 					//数组实例的创建
