@@ -75,9 +75,64 @@ PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
 "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
 <mapper namespace="com.xujianguo.dao.PersonDao">
 	<cache eviction="LRU" type="com.xujianguo.cache.RedisCache"/>
+
+	<select id="findById" parameterType="int" resultMap="PersonMap" useCache="true">
+		select * from person where id=#{id}
+	</select>
 </mapper>
 ```
 这样就可以实现我们的最终目的了。
 
 ####设计及实现
-#####二级缓存
+
+#####拦截器中实现缓存更新
+我们在CacheHandlerIntercept这个核心拦截器中拦截了四类method，query/update/commit/rollback，分别对应查询/更新/提交/回滚四类操作，下面这幅图展示了四类操作是如何对缓存进行更新的。
+![mybatis-redis-1](picture/mybatis-redis-1.png)
+
+#####二级缓存实现类RedisCache
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
