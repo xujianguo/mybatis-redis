@@ -89,8 +89,144 @@ PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
 我们在CacheHandlerIntercept这个核心拦截器中拦截了四类method，query/update/commit/rollback，分别对应查询/更新/提交/回滚四类操作，下面这幅图展示了四类操作是如何对缓存进行更新的。
 ![mybatis-redis-1](picture/mybatis-redis-1.png)
 
-#####二级缓存实现类RedisCache
+#####基于Redis的二级缓存实现
+**RedisCache：**实现了Cache接口，提供基本的获取缓存/移除缓存等方法，内置了一个RedisPool的连接池，用于获取跟Redis进行通讯的连接。
+```java
+public class RedisCache implements Cache {
+	private static Logger log = Logger.getLogger(RedisCache.class);
+	//id属性只是一个名字标识，就像PerpetualCache里面的id被BaseExecutor设置为LocalCache
+	private String id;
+	//读写锁，这个必须提供，Executor调用Cache的时候就加锁
+	private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+	//对象池
+	private RedisPool pool;
 
+    /* others */
+}
+```
+**RedisPool：**里面有Config和Limiter两个重要的类，Config主要是去加载properties文件去获取对应的连接池配置和其他重要配置，Limiter是一个线程控制器，防止高并发下机器瘫痪。其他就是获取连接和释放连接的基本方法了。
+```java
+public class RedisPool {
+	private static Logger log = Logger.getLogger(RedisPool.class);
+	//单例模式
+	private static RedisPool pool;
+	//真实使用的池
+	private Pool realPool;
+	//线程控制器
+	private Limiter limiter;
+	//配置
+	private Config config;
+
+    /* others */
+}
+```
+**Config：**首先遍历搜索properties文件，找到后就通过反射加载配置文件，原理是通过反射类的属性，然后去正则匹配对应的properties的key，接着反射创建类的实例，设置对应的value，这个是核心思想。
+```java
+public class Config {
+	//基本配置
+	private RedisBase base;
+	//对象池的配置
+	private RedisPool pool;
+	//分片的配置
+	private RedisShard shard;
+	//线程控制参数
+	private LimiterParam limiterParam;
+
+	/**
+	 * 加载对应的配置到对应的类中
+	 */
+	public Config() {
+		PropertyParser parser = PropertyParser.getInstance();
+		Properties pBase = parser.doFilter(new RegexFilter("^redis\\.base\\..*"));
+		Properties pPool = parser.doFilter(new RegexFilter("^redis\\.pool\\..*"));
+		Properties pShard = parser.doFilter(new RegexFilter("^redis\\.shard\\..*"));
+		Properties pLimiter = parser.doFilter(new RegexFilter("^redis\\.limiter\\..*"));
+		base = PropertyReflect.reflect(RedisBase.class, pBase);
+		pool = PropertyReflect.reflect(RedisPool.class, pPool);
+		shard = PropertyReflect.reflect(RedisShard.class, pShard);
+		limiterParam = PropertyReflect.reflect(LimiterParam.class, pLimiter);
+	}
+
+    /* others */
+}
+```
+**Limiter：**使用AQS框架的共享模式进行同步，设置一个limit值，达到超过limit值的时候进行阻塞，释放锁的时候limit值减1.
+```java
+public class Limiter {
+	//日志记录
+	private static final Logger log = Logger.getLogger(Limiter.class);
+	
+	//同步器
+	private final Sync sync;
+	//内部计数器
+	private final AtomicLong count;
+	//限制值
+	private volatile long limit;
+	
+	//初始化
+	public Limiter(long limit) {
+		this.limit = limit;
+		count = new AtomicLong(0);
+		sync = new Sync();
+	}
+	
+	/**
+	 * 使用AQS框架的共享模式进行同步
+	 * @author xujianguo
+	 * @email ray_xujianguo@yeah.net
+	 * @time 2015年3月31日
+	 */
+	@SuppressWarnings("serial")
+	private class Sync extends AbstractQueuedSynchronizer {
+		public Sync() {}
+		
+		/**
+		 * 超过limit值进行阻塞
+		 */
+		@Override
+		protected int tryAcquireShared(int arg) {
+			long newValue = count.incrementAndGet();
+			if(newValue > limit) {
+				count.decrementAndGet();
+				return -1;
+			}
+			return 1;
+		}
+		
+		/**
+		 * 减少limit
+		 */
+		@Override
+		protected boolean tryReleaseShared(int arg) {
+			count.decrementAndGet();
+			return true;
+		}
+	}
+	
+	/**
+	 * 限制
+	 * @throws InterruptedException
+	 */
+	public void limit() throws InterruptedException {
+		sync.acquireSharedInterruptibly(0);
+	}
+	
+	/**
+	 * 解除限制
+	 * @return
+	 */
+	public boolean unlimit() {
+		return sync.releaseShared(0);
+	}
+	
+	/**
+	 * 重置计数器
+	 */
+	public void reset() {
+		count.set(0);
+	}
+}
+```
 
 
 
